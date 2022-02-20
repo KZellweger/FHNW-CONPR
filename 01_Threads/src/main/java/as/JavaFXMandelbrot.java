@@ -215,7 +215,7 @@ public class JavaFXMandelbrot extends Application {
         new Thread(() -> {
             double start = System.currentTimeMillis();
             // Replace the following line with Mandelbrot.computeParallel(...)
-            Mandelbrot.computeSequential(painter, plane, cancelSupport);
+            Mandelbrot.computeParallel(painter, plane, cancelSupport);
             double end = System.currentTimeMillis();
             Platform.runLater(() -> millis.set((end - start) + "ms"));
         },"mandelbrot-compute").start();

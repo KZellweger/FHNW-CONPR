@@ -50,34 +50,30 @@ public class Mandelbrot {
         double imMax = plane.center.i + half;
         double step = plane.length / IMAGE_LENGTH;
 
-        new Thread(() -> {
-            for (int x = 0; x < (IMAGE_LENGTH / 2) && !cancel.isCancelled(); x++) { // x-axis
-                double re = reMin + x * step; // map pixel to complex plane
-                for (int y = 0; y < IMAGE_LENGTH; y++) { // y-axis
-                    double im = imMax - y * step; // map pixel to complex plane
+        int numOfThreads = 8;
+        int planeStep = IMAGE_LENGTH / numOfThreads;
 
-                    //int iterations = mandel(re, im);
-                    int iterations = mandel(new Complex(re, im));
-                    painter.paint(x, y, getColor(iterations));
-                }
-            }
-        },"leftMandel").start();
+        for (int i = 0; i < numOfThreads; i++){
+            int finalI = i;
+            new Thread(() -> calculateMandelPart(finalI * planeStep, (finalI + 1) * planeStep,cancel, reMin, step, imMax, painter), "Mandel#" + i).start();
+        }
 
-        new Thread(() -> {
-            for (int x = (IMAGE_LENGTH / 2); x < IMAGE_LENGTH  && !cancel.isCancelled(); x++) { // x-axis
-                double re = reMin + x * step; // map pixel to complex plane
-                for (int y = 0; y < IMAGE_LENGTH; y++) { // y-axis
-                    double im = imMax - y * step; // map pixel to complex plane
 
-                    //int iterations = mandel(re, im);
-                    int iterations = mandel(new Complex(re, im));
-                    painter.paint(x, y, getColor(iterations));
-                }
-            }
-        },"rightMandel").start();
     }
 
+    private static void calculateMandelPart(int start, int end, CancelSupport cancel, double reMin, double step, double imMax, PixelPainter painter){
+        System.out.println("Start: " + start + " , End: " + end);
+        for (int x = start; x < end  && !cancel.isCancelled(); x++) { // x-axis
+            double re = reMin + x * step; // map pixel to complex plane
+            for (int y = 0; y < IMAGE_LENGTH; y++) { // y-axis
+                double im = imMax - y * step; // map pixel to complex plane
 
+                //int iterations = mandel(re, im);
+                int iterations = mandel(new Complex(re, im));
+                painter.paint(x, y, getColor(iterations));
+            }
+        }
+    }
 
     /**
      * z_n+1 = z_n^2 + c starting with z_0 = 0
