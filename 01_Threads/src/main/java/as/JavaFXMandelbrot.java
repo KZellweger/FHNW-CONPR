@@ -212,13 +212,14 @@ public class JavaFXMandelbrot extends Application {
         CancelSupport cancelSupport = new CancelSupport();
         cancelled.addListener((o, oldVal, newVal) -> cancelSupport.cancel());
 
-        { // <<<<<<<<This block of code should run in a separate Thread >>>>>>>
+        new Thread(() -> {
             double start = System.currentTimeMillis();
             // Replace the following line with Mandelbrot.computeParallel(...)
             Mandelbrot.computeSequential(painter, plane, cancelSupport);
             double end = System.currentTimeMillis();
             Platform.runLater(() -> millis.set((end - start) + "ms"));
-        } // <<<<<<<<This block of code should run in a separate Thread >>>>>>>
+        },"mandelbrot-compute").start();
+
 
         return image;
     }

@@ -45,9 +45,39 @@ public class Mandelbrot {
 
 
     public static void computeParallel(PixelPainter painter, Plane plane, CancelSupport cancel) {
-        // TODO Implement a parallel version of the mandelbrot set computation.
-        throw new RuntimeException("To be implemented!");
+        double half = plane.length / 2;
+        double reMin = plane.center.r - half;
+        double imMax = plane.center.i + half;
+        double step = plane.length / IMAGE_LENGTH;
+
+        new Thread(() -> {
+            for (int x = 0; x < (IMAGE_LENGTH / 2) && !cancel.isCancelled(); x++) { // x-axis
+                double re = reMin + x * step; // map pixel to complex plane
+                for (int y = 0; y < IMAGE_LENGTH; y++) { // y-axis
+                    double im = imMax - y * step; // map pixel to complex plane
+
+                    //int iterations = mandel(re, im);
+                    int iterations = mandel(new Complex(re, im));
+                    painter.paint(x, y, getColor(iterations));
+                }
+            }
+        },"leftMandel").start();
+
+        new Thread(() -> {
+            for (int x = (IMAGE_LENGTH / 2); x < IMAGE_LENGTH  && !cancel.isCancelled(); x++) { // x-axis
+                double re = reMin + x * step; // map pixel to complex plane
+                for (int y = 0; y < IMAGE_LENGTH; y++) { // y-axis
+                    double im = imMax - y * step; // map pixel to complex plane
+
+                    //int iterations = mandel(re, im);
+                    int iterations = mandel(new Complex(re, im));
+                    painter.paint(x, y, getColor(iterations));
+                }
+            }
+        },"rightMandel").start();
     }
+
+
 
     /**
      * z_n+1 = z_n^2 + c starting with z_0 = 0
