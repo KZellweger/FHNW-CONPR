@@ -2,6 +2,9 @@ package as;
 
 import javafx.scene.paint.Color;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Computes the Mandelbrot set.
  * http://en.wikipedia.org/wiki/Mandelbrot_set
@@ -13,7 +16,7 @@ public class Mandelbrot {
     public static final int COLOR_COUNT = 64;
     private static Color[] colors = generateColors(COLOR_COUNT);
 
-    private static Color getColor(int iterations) {
+    static Color getColor(int iterations) {
         return iterations == MAX_ITERATIONS ? Color.BLACK : colors[iterations % COLOR_COUNT];
     }
 
@@ -49,16 +52,25 @@ public class Mandelbrot {
         double reMin = plane.center.r - half;
         double imMax = plane.center.i + half;
         double step = plane.length / IMAGE_LENGTH;
-
+        List<Thread> threadList = new ArrayList<>();
         int numOfThreads = 8;
         int planeStep = IMAGE_LENGTH / numOfThreads;
 
         for (int i = 0; i < numOfThreads; i++){
             int finalI = i;
-            new Thread(() -> calculateMandelPart(finalI * planeStep, (finalI + 1) * planeStep,cancel, reMin, step, imMax, painter), "Mandel#" + i).start();
+            threadList.add(new Thread(() -> new MandelSlice(finalI * planeStep, (finalI + 1) * planeStep,cancel, reMin,step,imMax,painter)));
+           threadList.add(new Thread(() -> calculateMandelPart(finalI * planeStep, (finalI + 1) * planeStep,cancel, reMin, step, imMax, painter), "Mandel#" + i));
         }
-
-
+        threadList.forEach(thread -> {
+            thread.start();
+        });
+        threadList.forEach(thread -> {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private static void calculateMandelPart(int start, int end, CancelSupport cancel, double reMin, double step, double imMax, PixelPainter painter){
