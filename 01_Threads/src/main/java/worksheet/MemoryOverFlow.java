@@ -34,7 +34,7 @@ class AllocateMemory implements Runnable{
         System.out.println("Current Thread: " + Thread.currentThread());
         parent.add(someRam); // prevent GC
         try {
-            Thread.sleep(6000); //keep thread alive, but give a chance to recover
+            Thread.sleep(Long.MAX_VALUE); //keep thread alive, but give a chance to recover
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

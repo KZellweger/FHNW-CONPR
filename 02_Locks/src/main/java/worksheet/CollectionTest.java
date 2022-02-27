@@ -2,10 +2,8 @@ package worksheet;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.junit.Test;
 
@@ -19,7 +17,9 @@ public class CollectionTest {
 
     @Test
     public void testLinkedListParallel() throws InterruptedException {
-        testCollection(new LinkedList<Integer>(), Runtime.getRuntime().availableProcessors());
+
+        testCollection(new ConcurrentLinkedQueue<Integer>(), Runtime.getRuntime().availableProcessors());
+        //testCollection(Collections.synchronizedList(new LinkedList<>()), Runtime.getRuntime().availableProcessors());
     }
 
 
