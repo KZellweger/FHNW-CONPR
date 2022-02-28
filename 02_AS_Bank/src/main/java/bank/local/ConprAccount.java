@@ -7,56 +7,55 @@ import bank.OverdrawException;
 class ConprAccount implements Account {
     private static int id = 0;
 
-    private final Object readLock = new Object();
-    private final Object writeLock = new Object();
+    private final Object lock = new Object();
 
-    private String number;
-    private String owner;
+    private final String number;
+    private final String owner;
     private double balance;
     private boolean active = true;
 
     ConprAccount(String owner) {
         this.owner = owner;
-        this.number = "CONPR_ACC_" + id++;
+        this.number = "CONPR_ACC_" + incrementId();
+    }
+
+    private static synchronized int incrementId() {
+        return id++;
     }
 
     @Override
     public double getBalance() {
-        synchronized (readLock) {
+        synchronized (lock) {
             return balance;
         }
     }
 
     @Override
     public String getOwner() {
-        synchronized (readLock) {
-            return owner;
-        }
+        return owner;
     }
 
     @Override
     public String getNumber() {
-        synchronized (readLock) {
-            return number;
-        }
+        return number;
     }
 
     @Override
     public boolean isActive() {
-        synchronized (readLock) {
+        synchronized (lock) {
             return active;
         }
     }
 
     void passivate() {
-        synchronized (writeLock) {
+        synchronized (lock) {
             active = false;
         }
     }
 
     @Override
     public void deposit(double amount) throws InactiveException {
-        synchronized (writeLock) {
+        synchronized (lock) {
             if (!active)
                 throw new InactiveException("account not active");
             if (amount < 0)
@@ -67,7 +66,7 @@ class ConprAccount implements Account {
 
     @Override
     public void withdraw(double amount) throws InactiveException, OverdrawException {
-        synchronized (writeLock) {
+        synchronized (lock) {
             if (!active)
                 throw new InactiveException("account not active");
             if (amount < 0)
