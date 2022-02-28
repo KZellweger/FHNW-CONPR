@@ -55,6 +55,13 @@ class ConprBank implements Bank {
     public void transfer(Account from, Account to, double amount)
             throws IOException, InactiveException, OverdrawException {
         from.withdraw(amount);
-        to.deposit(amount);
+        try {
+            to.deposit(amount);
+        } catch (InactiveException e) {
+            System.out.println("Target Account is Inactive, restore deposit and re-throw");
+            from.deposit(amount);
+            throw e;
+        }
+
     }
 }

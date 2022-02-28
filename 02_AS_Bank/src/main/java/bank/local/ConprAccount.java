@@ -7,6 +7,9 @@ import bank.OverdrawException;
 class ConprAccount implements Account {
     private static int id = 0;
 
+    private final Object readLock = new Object();
+    private final Object writeLock = new Object();
+
     private String number;
     private String owner;
     private double balance;
@@ -19,46 +22,60 @@ class ConprAccount implements Account {
 
     @Override
     public double getBalance() {
-        return balance;
+        synchronized (readLock) {
+            return balance;
+        }
     }
 
     @Override
     public String getOwner() {
-        return owner;
+        synchronized (readLock) {
+            return owner;
+        }
     }
 
     @Override
     public String getNumber() {
-        return number;
+        synchronized (readLock) {
+            return number;
+        }
     }
 
     @Override
     public boolean isActive() {
-        return active;
+        synchronized (readLock) {
+            return active;
+        }
     }
 
     void passivate() {
-        active = false;
+        synchronized (writeLock) {
+            active = false;
+        }
     }
 
     @Override
     public void deposit(double amount) throws InactiveException {
-        if (!active)
-            throw new InactiveException("account not active");
-        if (amount < 0)
-            throw new IllegalArgumentException("negative amount");
-        balance += amount;
+        synchronized (writeLock) {
+            if (!active)
+                throw new InactiveException("account not active");
+            if (amount < 0)
+                throw new IllegalArgumentException("negative amount");
+            balance += amount;
+        }
     }
 
     @Override
     public void withdraw(double amount) throws InactiveException, OverdrawException {
-        if (!active)
-            throw new InactiveException("account not active");
-        if (amount < 0)
-            throw new IllegalArgumentException("negative amount");
-        if (balance - amount < 0)
-            throw new OverdrawException("account cannot be overdrawn");
-        balance -= amount;
+        synchronized (writeLock) {
+            if (!active)
+                throw new InactiveException("account not active");
+            if (amount < 0)
+                throw new IllegalArgumentException("negative amount");
+            if (balance - amount < 0)
+                throw new OverdrawException("account cannot be overdrawn");
+            balance -= amount;
+        }
     }
 
 }
