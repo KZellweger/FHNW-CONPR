@@ -6,14 +6,14 @@ import bank.InactiveException;
 import bank.OverdrawException;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 class ConprBank implements Bank {
 
-    private Map<String, ConprAccount> accounts = new HashMap<String, ConprAccount>();
+    private final Map<String, ConprAccount> accounts = new ConcurrentHashMap<>();
 
     @Override
     public Set<String> getAccountNumbers() {
@@ -37,11 +37,13 @@ class ConprBank implements Bank {
     public boolean closeAccount(String number) {
         final ConprAccount a = accounts.get(number);
         if (a != null) {
-            if (a.getBalance() != 0 || !a.isActive()) {
-                return false;
+            synchronized (a) {
+                if (a.getBalance() != 0 || !a.isActive()) {
+                    return false;
+                }
+                a.passivate();
+                return true;
             }
-            a.passivate();
-            return true;
         }
         return false;
     }
@@ -54,14 +56,23 @@ class ConprBank implements Bank {
     @Override
     public void transfer(Account from, Account to, double amount)
             throws IOException, InactiveException, OverdrawException {
-        from.withdraw(amount);
-        try {
-            to.deposit(amount);
-        } catch (InactiveException e) {
-            System.out.println("Target Account is Inactive, restore deposit and re-throw");
-            from.deposit(amount);
-            throw e;
+        Account[] as;
+        if (from.getNumber().compareTo(to.getNumber()) < 0) {
+            as = new Account[]{from, to};
+        } else if (from.getNumber().compareTo(to.getNumber()) > 0) {
+            as = new Account[]{to, from};
+        } else {
+            throw new IllegalArgumentException("Transfer within the same Account is nonsense");
         }
 
+        synchronized (as[0]) {
+            synchronized (as[1]) {
+                if (!from.isActive() || !to.isActive()) {
+                    throw new InactiveException();
+                }
+                from.withdraw(amount);
+                to.deposit(amount);
+            }
+        }
     }
 }
