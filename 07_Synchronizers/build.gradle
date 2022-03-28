@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'idea'
+}
+
+sourceCompatibility = 17
+targetCompatibility = 17
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
+repositories {
+    jcenter()
+    flatDir { dirs 'lib' }
+}
+
+dependencies {
+    implementation 'net.jcip:jcip-annotations:1.0'
+    implementation 'junit:junit:4.12'
+}
+
+dependencies {
+    implementation ':solution:'
+}
