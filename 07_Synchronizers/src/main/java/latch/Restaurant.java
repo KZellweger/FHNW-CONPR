@@ -1,39 +1,55 @@
 package latch;
 
+import java.util.concurrent.CountDownLatch;
+
 public class Restaurant {
 
     public static void main(String[] args) {
-        int nrGuests = 2;
+        int nrGuests = 20;
+        int nrCooks = 4;
+        CountDownLatch cookingLatch = new CountDownLatch(nrCooks);
+        CountDownLatch eatingLatch = new CountDownLatch(nrGuests);
 
-        new Cook(/* TODO */).start();
 
+        for (int i = 0; i < nrCooks; i++) {
+            new Cook(cookingLatch).start();
+        }
         for (int i = 0; i < nrGuests; i++) {
-            new Guest(/* TODO */).start();
+            new Guest(cookingLatch, eatingLatch).start();
         }
 
-        new DishWasher(/* TODO */).start();
+        new DishWasher(eatingLatch).start();
     }
 
 
     static class Cook extends Thread {
-        public Cook(/* TODO */) {
+        CountDownLatch latch;
+
+        public Cook(CountDownLatch cookingLatch) {
+            latch = cookingLatch;
         }
 
         @Override
         public void run() {
             System.out.println("Start Cooking..");
             try {
-                sleep(5000);
+                sleep((int) (Math.random() * 5000));
             } catch (InterruptedException e) {
             }
             System.out.println("Meal is ready");
-            /* TODO */
+            latch.countDown();
         }
     }
 
 
     static class Guest extends Thread {
-        public Guest(/* TODO */) {
+
+        CountDownLatch cookingLatch;
+        CountDownLatch eatingLatch;
+
+        public Guest(CountDownLatch cookingLatch, CountDownLatch eatingLatch) {
+            this.cookingLatch = cookingLatch;
+            this.eatingLatch = eatingLatch;
         }
 
         @Override
@@ -41,11 +57,11 @@ public class Restaurant {
             try {
                 sleep(1000);
                 System.out.println("Entering restaurant and placing order.");
-                /* TODO */
+                cookingLatch.await();
                 System.out.println("Enjoying meal.");
-                sleep(5000);
+                sleep((int) (Math.random() * 1000));
                 System.out.println("Meal was excellent!");
-                /* TODO */
+                eatingLatch.countDown();
             } catch (InterruptedException e) {
             }
         }
@@ -53,14 +69,17 @@ public class Restaurant {
 
 
     static class DishWasher extends Thread {
-        public DishWasher(/* TODO */) {
+        CountDownLatch latch;
+
+        public DishWasher(CountDownLatch eatingLatch) {
+            latch = eatingLatch;
         }
 
         @Override
         public void run() {
             try {
                 System.out.println("Waiting for dirty dishes.");
-                /* TODO */
+                latch.await();
                 System.out.println("Washing dishes.");
                 sleep(0);
             } catch (InterruptedException e) {

@@ -1,5 +1,9 @@
 package blockingQueue;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
+
 public class OrderProcessing {
 
     public static void main(String[] args) {
@@ -7,16 +11,19 @@ public class OrderProcessing {
         int nValidators = 2;
         int nProcessors = 3;
 
+        BlockingQueue<Order> orders = new ArrayBlockingQueue<>(10);
+        BlockingQueue<Order> validOrders = new ArrayBlockingQueue<>(10);
+
         for (int i = 0; i < nCustomers; i++) {
-            new Customer("" + i /* TODO */).start();
+            new Customer("Customer" + i, orders).start();
         }
 
         for (int i = 0; i < nValidators; i++) {
-            new OrderValidator(/* TODO */).start();
+            new OrderValidator("Validator" + i, orders, validOrders).start();
         }
 
         for (int i = 0; i < nProcessors; i++) {
-            new OrderProcessor(/* TODO */).start();
+            new OrderProcessor("Processor" + i, validOrders).start();
         }
     }
 
@@ -37,9 +44,11 @@ public class OrderProcessing {
 
 
     static class Customer extends Thread {
+        BlockingQueue<Order> orders;
 
-        public Customer(String name /* TODO */) {
+        public Customer(String name, BlockingQueue<Order> orders) {
             super(name);
+            this.orders = orders;
         }
 
         private Order createOrder() {
@@ -49,7 +58,9 @@ public class OrderProcessing {
         }
 
         private void handOverToValidator(Order o) throws InterruptedException {
-            // TODO
+            if (!orders.offer(o, 3L, TimeUnit.SECONDS)) {
+                System.err.println("Timed Out " + o.toString());
+            }
         }
 
         @Override
@@ -68,11 +79,17 @@ public class OrderProcessing {
 
     static class OrderValidator extends Thread {
 
-        public OrderValidator(/* TODO */) {
+        BlockingQueue<Order> orders;
+        BlockingQueue<Order> validOrders;
+
+        public OrderValidator(String name, BlockingQueue<Order> orders, BlockingQueue<Order> validOrders) {
+            super(name);
+            this.orders = orders;
+            this.validOrders = validOrders;
         }
 
         public Order getNextOrder() throws InterruptedException {
-            return null; // TODO
+            return orders.take();
         }
 
         public boolean isValid(Order o) {
@@ -80,7 +97,7 @@ public class OrderProcessing {
         }
 
         public void handOverToProcessor(Order o) throws InterruptedException {
-            // TODO
+            validOrders.put(o);
         }
 
         @Override
@@ -103,11 +120,14 @@ public class OrderProcessing {
 
     static class OrderProcessor extends Thread {
 
-        public OrderProcessor(/* TODO */) {
+        BlockingQueue<Order> orders;
+
+        public OrderProcessor(String name, BlockingQueue<Order> orders) {
+            this.orders = orders;
         }
 
         public Order getNextOrder() throws InterruptedException {
-            return null; // TODO
+            return orders.take();
         }
 
         public void processOrder(Order o) {
