@@ -40,8 +40,7 @@ public class Restaurant {
             latch.countDown();
         }
     }
-
-
+    
     static class Guest extends Thread {
 
         CountDownLatch cookingLatch;
