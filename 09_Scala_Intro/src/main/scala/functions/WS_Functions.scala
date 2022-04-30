@@ -1,6 +1,6 @@
 package functions
 
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicInteger, AtomicReference}
 
 object Einleitung {
   def call(): Unit = println(":-)")
@@ -20,13 +20,27 @@ object Einleitung {
 
 object Aufgabe1 {
 
-  def clock = ???
-  def everySecond(action: Int => Unit): Unit = ???
+  def clock(i: Int): Unit = println(s"Tick(${i})")
+
+  def everySecond(action: Int => Unit): Unit = {
+    new Thread() {
+      override def run(): Unit = {
+        var counter = 0
+        while (counter < 20) {
+          action(counter)
+          counter = counter + 1
+          Thread.sleep(1000)
+        }
+      }
+    }.start()
+  }
 
   def main(args: Array[String]): Unit = {
 
+    //    everySecond(clock)
+
     /* Anonyme Funktionen */
-    everySecond(i => println("Tick(" + i + ")"))
+    //    everySecond(i => println("Tick(" + i + ")"))
 
     everySecond(i => {
       println("Tock()")
@@ -36,31 +50,74 @@ object Aufgabe1 {
 }
 
 object Aufgabe2 {
-  def time(block: () => Unit): Unit = ???
+  // By Name Parameter
+  def time(block: => Unit): Unit = {
+    val startTime = System.currentTimeMillis();
+    block
+    val endTime = System.currentTimeMillis();
+    println(s"[${endTime - startTime} ms]")
+  }
 
-  def time[A](block: () => A): A = ???
+  def time[A](block: () => A): A = {
+    val startTime = System.currentTimeMillis();
+    val res: A = block()
+    val endTime = System.currentTimeMillis();
+    println(s"[${endTime - startTime} ms]")
+    res
+  }
 
   def main(args: Array[String]): Unit = {
-    time(() => {
+    time {
       Thread.sleep(100)
-    })
+    }
 
     val a = time(() => {
       Thread.sleep(100)
       "Done"
     })
+    println(s"Returned ${a}")
 
   }
 }
 
 object Aufgabe3 {
   class NiceAtomicInt(init: Int) {
-    ???
+    val value = new AtomicInteger(init)
+
+    def modify(calc: Int => Int) {
+      while (true) {
+        val oldValue = value.get()
+        val newValue = calc(oldValue)
+        if (value.compareAndSet(oldValue, newValue)) return
+      }
+    }
+
+    def get(): Int = value.get()
   }
+
+
+  class NiceAtomic[A](init: A) {
+    val value = new AtomicReference[A](init)
+
+    def modify(calc: A => A) {
+      while (true) {
+        val oldValue = value.get()
+        val newValue = calc(oldValue)
+        if (value.compareAndSet(oldValue, newValue)) return
+      }
+    }
+
+    def get(): A = value.get()
+  }
+
 
   def main(args: Array[String]): Unit = {
     val balance = new NiceAtomicInt(0)
-    //balance.modify(b => b + 10)
+    balance.modify(b => b + 10 * 42)
+    println(balance.get())
+    val str = new NiceAtomic[String]("ollah")
+    str.modify(b => b.reverse)
+    println(str.get())
   }
 }
 
