@@ -1,0 +1,47 @@
+plugins {
+    id 'scala'
+}
+
+sourceCompatibility = 17
+targetCompatibility = 17
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation 'org.scala-lang:scala-library:2.13.8'
+    implementation 'com.typesafe.akka:akka-actor_2.13:2.6.19'
+    implementation 'org.scala-lang.modules:scala-parallel-collections_2.13:1.0.3'
+}
+
+
+
+task gradleWrapper(type: Wrapper)
+task zip(type: Zip) {
+    from projectDir
+    description "Creates student distribution."
+    group = 'distribution'
+
+    dependsOn gradleWrapper
+
+    include 'build.gradle'
+    
+    include 'gradle/**'
+    include 'gradlew'
+    include 'gradlew.bat'
+
+
+    include 'src/main/scala/le/01_Basics.scala'
+    include 'src/main/scala/le/02_CreatingActors.scala'
+    include 'src/main/scala/le/03_PrintActor.scala'
+    include 'src/main/scala/le/04_CaseClasses.scala'
+    include 'src/main/scala/le/05_AdvancedMessaging.scala'
+    include 'src/main/scala/le/06_FSM.scala'
+    include 'src/main/scala/le/07_AkkaSpecifics.scala'
+    include 'src/main/scala/le/08_OtherExamples.scala'
+
+    include 'src/main/scala/ws/LenzoPalace.scala'
+}

@@ -1,0 +1,25 @@
+plugins {
+    id 'scala'
+    id 'org.openjfx.javafxplugin' version '0.0.11'
+}
+
+repositories {
+    jcenter()
+    flatDir { dirs 'lib' }
+}
+
+sourceCompatibility = 17
+targetCompatibility = 17
+compileJava.options.encoding = 'UTF-8'
+compileTestJava.options.encoding = 'UTF-8'
+
+javafx {
+    version = "17.0.2"
+    modules = [ 'javafx.controls', 'javafx.graphics', 'javafx.base' ]
+}
+
+dependencies {
+    implementation 'org.scala-lang:scala-library:2.13.8'
+    implementation 'org.scala-stm:scala-stm_2.13:0.11.1'
+    implementation ':bank-core:'
+}
